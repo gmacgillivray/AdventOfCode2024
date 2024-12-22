@@ -5,8 +5,8 @@ import re
 
 # Open the file and read all lines into a list
 f = open ("AoC_2024_Puzzle4Data.txt", "r")
-
 data = f.readlines()
+f.close()
 
 # Define variables and initialize
 a = []
@@ -14,13 +14,12 @@ b = []
 c = []
 d = []
 sum = 0
+sum2 = 0
 string1 = "XMAS"
 string2 = "SAMX"
 
 for line in data:
     a.append(line.strip("\n"))
-
-print(a)
 
 def transpose_list(list_to_transpose):
 
@@ -96,7 +95,21 @@ for line in c:
 for line in d:
     sum += line.count(string1) + line.count(string2) 
 
-f.close()
+for i in range(1, len(a) - 1):
+    for j in range(1, len(a[0]) - 1):
+        
+        if a[i][j] == "A":
+            if a[i - 1][j - 1] == "M" and a[i + 1][j + 1] == "S":
+                if a[i + 1][j - 1] == "M" and a[i -1][j + 1] == "S":
+                    sum2 += 1
+                if a[i + 1][j - 1] == "S" and a[i -1][j + 1] == "M":
+                    sum2 += 1
+            if a[i - 1][j - 1] == "S" and a[i + 1][j + 1] == "M":
+                if a[i + 1][j - 1] == "M" and a[i -1][j + 1] == "S":
+                    sum2 += 1
+                if a[i + 1][j - 1] == "S" and a[i -1][j + 1] == "M":
+                    sum2 += 1       
 
 # Print the results
-print("The sum of all instances of XMAS", sum)
+print("The sum of all instances of XMAS for part a is", sum)
+print("The sum of all instances of XMAS for part b is", sum2)

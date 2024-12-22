@@ -32,7 +32,6 @@ def move_robot(p, move, map, walls, boxes):
         if map[p[0] - 1][p[1]] not in boxes and map[p[0] - 1][p[1]] not in walls:
             p = [p[0] - 1], [p[1]]
         
-    
     new_pos_x = (position[0] + velocity[0] * t) % size[0]
     new_pos_y = (position[1] + velocity[1] * t) % size[1]
 
@@ -95,8 +94,6 @@ for line in data:
             instructions += (line.strip("\n"))
     else: 
         input_break = False 
-
-
 
 print(map)
 print(instructions)

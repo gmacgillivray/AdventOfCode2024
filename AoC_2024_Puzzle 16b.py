@@ -52,15 +52,48 @@ def calculate_turn_cost(prev_dir, curr, next_):
     else:  # 90-degree turn
         return 1001, curr_to_next
 
-def find_shortest_path_with_weights(graph, start, end, start_dir=None):
+def is_prefix(path, ignored_paths):
+    """Check if the given path matches any ignored path."""
+    path = tuple(path)
+
+    for ignored in ignored_paths:
+        if len(path) == len(ignored) and path == ignored:
+            return True
+    return False
+
+def find_shortest_path_with_weights(
+    graph, start, end, start_dir=None, ignore_full_paths=None, max_score=float('inf')
+):
+    """
+    Find the shortest path with weights, ignoring specific full paths and stopping if the cost exceeds `max_score`.
+    
+    :param graph: Dictionary where keys are nodes and values are lists of neighboring nodes.
+    :param start: Starting node.
+    :param end: Destination node.
+    :param start_dir: Starting direction as a tuple (dx, dy).
+    :param ignore_full_paths: List of full paths to ignore.
+    :param max_score: Maximum allowable cost for the path.
+    :return: Tuple (shortest_path, cost) or ([], inf) if no valid path exists.
+    """
     # Priority queue: (cost, current_node, previous_direction, path_so_far)
     pq = [(0, start, start_dir, [start])]
 
-    # Store the minimum cost to reach each node
-    min_cost = {start: 0}
+    # Convert ignored paths to tuples for efficient comparison
+    ignore_full_paths = [tuple(p) for p in (ignore_full_paths or [])]
+
+    # Store the minimum cost to reach each path
+    min_cost = {}
 
     while pq:
         cost, current, prev_dir, path = heapq.heappop(pq)
+
+        # If the current path cost exceeds max_score, skip further exploration
+        if cost > max_score:
+            continue
+
+        # If the current path is a prefix of any ignored path, skip it
+        if is_prefix(path, ignore_full_paths):
+            continue
 
         # If we've reached the destination, return the path
         if current == end:
@@ -71,15 +104,51 @@ def find_shortest_path_with_weights(graph, start, end, start_dir=None):
             turn_cost, new_dir = calculate_turn_cost(prev_dir, current, neighbor)
             new_cost = cost + turn_cost
 
-            # If this path is cheaper, or we haven't visited this node
-            if neighbor not in min_cost or new_cost < min_cost[neighbor]:
-                min_cost[neighbor] = new_cost
-                heapq.heappush(pq, (new_cost, neighbor, new_dir, path + [neighbor]))
+            new_path = path + [neighbor]
+
+            # If this path is cheaper, or we haven't visited this path
+            if tuple(new_path) not in min_cost or new_cost < min_cost[tuple(new_path)]:
+                min_cost[tuple(new_path)] = new_cost
+                heapq.heappush(pq, (new_cost, neighbor, new_dir, new_path))
 
     # If no path is found
     return [], float('inf')
 
 
+def move_reinder(p, move, walls, boxes):
+
+    directions = {"<": [-1, 0], ">": [1, 0], "^": [0, -1], "v": [0, 1]}
+
+    # Determine movement vector
+    vector = directions.get(move)
+    if vector is None:
+        raise ValueError("Invalid move symbol")
+
+    # Determine how many boxes can be moved if any by looking ahead to see if there are free spaces to move
+    found_a_wall = False
+    found_a_space = False
+    new_pos = [p[0] + vector[0], p[1] + vector[1]]
+    k = 0
+
+    while not found_a_wall and not found_a_space:
+        if new_pos in walls:
+            found_a_wall = True
+            k = 0
+        elif new_pos in boxes:
+            k += 1
+        else:
+            found_a_space = True
+
+        new_pos = [new_pos[0] + vector[0], new_pos[1] + vector[1]]
+
+    # Calculate new positions
+    if found_a_space:
+        p = [p[0] + vector[0], p[1] + vector[1]]
+        if k > 0:
+            box_new_pos = [p[0] + k * vector[0], p[1] + k * vector[1]]
+            boxes[boxes.index([p[0], p[1]])] = box_new_pos
+    
+    return p, boxes
 
 def replace_characters_in_map(p, c, m):
     for y in range(len(m)):
@@ -127,8 +196,6 @@ def map_potential_steps(wandh, walls):
                         points_graph[label].append(new_pos)
 
     return points_graph
-
-
 # Open the file and read all lines into a list
 with open("AoC_2024_Puzzle16Data_test2.txt", "r") as f:
     data = f.readlines()
@@ -148,16 +215,34 @@ walls = find_symbols_in_map(map, "#")
 wandh = [len(map[0]) ,len(map)]
 start_dir = (1, 0)
 potential_steps = map_potential_steps(wandh, walls)
+ignore_paths = []
 
 path, path_score = find_shortest_path_with_weights(potential_steps, start, end, start_dir)
+temp_path_score = path_score
+
+k = 0
+
+while temp_path_score == path_score and k <= 100:
+    print(k)
+#    path.remove(end)
+    ignore_paths.append(path)
+    path, temp_path_score = find_shortest_path_with_weights(potential_steps, start, end, start_dir, ignore_paths, path_score)
+    k += 1
+
+seating_tiles = []
+
+for i in range(len(ignore_paths)):
+    for point in ignore_paths[i]:
+        if point not in seating_tiles:
+            seating_tiles.append(point)
 
 #for key, value in potential_steps.items():
 #    print(key, value)
-for point in path:
-    path[path.index(point)] = [point[0], point[1]]
+for point in seating_tiles:
+    seating_tiles[seating_tiles.index(point)] = [point[0], point[1]]
 
-final_map = draw_map(wandh, path, walls)
+final_map = draw_map(wandh, seating_tiles, walls)
 for line in final_map:
     print(line)
 
-print("The shortest path length is", path_score, len(path))
+print("The number of seating tiles is", len(seating_tiles))

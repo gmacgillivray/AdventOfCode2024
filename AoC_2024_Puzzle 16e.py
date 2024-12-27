@@ -79,6 +79,33 @@ def find_shortest_path_with_weights(graph, start, end, start_dir=None):
     # If no path is found
     return [], float('inf')
 
+# Define subfunctions
+def count_paths(graph, start, end, visited=None):
+    
+    all_paths = []
+
+    if visited is None:
+        visited = set()
+
+    # If start and end are the same, there is one path
+    if start == end:
+        all_paths.append(visited)
+        return 1, all_paths
+
+    # Mark the current node as visited
+    visited.add(start)
+
+    # Initialize path count
+    path_count = 0
+
+    # Recur for all the vertices adjacent to this vertex
+    for neighbor in graph[start]:
+        if neighbor not in visited:
+            temp_count, temp_paths = count_paths(graph, neighbor, end, visited.copy())
+            path_count += temp_count
+            all_paths.append(temp_paths)
+
+    return path_count, all_paths
 
 
 def replace_characters_in_map(p, c, m):
@@ -150,6 +177,8 @@ start_dir = (1, 0)
 potential_steps = map_potential_steps(wandh, walls)
 
 path, path_score = find_shortest_path_with_weights(potential_steps, start, end, start_dir)
+
+num_paths, all_paths = count_paths(potential_steps, start, end)
 
 #for key, value in potential_steps.items():
 #    print(key, value)

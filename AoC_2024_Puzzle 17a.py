@@ -32,7 +32,7 @@ def find_symbols_in_map(m, sym):
     for y in range(len(m)):
         for x in range(len(m[y])):
             if m[y][x] == sym:
-                sym_loc.append([x, y])
+                sym_loc.append((x, y))
     
     return sym_loc
 
@@ -51,41 +51,99 @@ def calculate_turn_cost(prev_dir, curr, next_):
         return 2001, curr_to_next
     else:  # 90-degree turn
         return 1001, curr_to_next
+    
+def is_prefix(path, ignored_paths):
+    """Check if the given path matches any ignored path."""
+    
+#    for ignored in ignored_paths:
+#        if len(path) <= len(ignored) and path == ignored[:len(path)]:
+#            return True
 
-def find_shortest_path_with_weights(graph, start, end, start_dir=None):
+    for i in range(len(ignored_paths)):
+        if len(path) <= len(ignored_paths[i]) and path == ignored_paths[i][:len(path)]:
+            return True
+           
+    return False
+
+def find_shortest_path_with_weights(graph, start, end, start_dir=None, max_score=float('inf'), ignore_paths=None):
     # Priority queue: (cost, current_node, previous_direction, path_so_far)
     pq = [(0, start, start_dir, [start])]
+    all_paths = []
+    all_costs = []
+    alternate_paths = {}
 
     # Store the minimum cost to reach each node
     min_cost = {start: 0}
 
+    # Convert ignore_paths to sets for easier comparison
+    #ignore_paths = set(tuple(path) for path in (ignore_paths or []))
+
     while pq:
         cost, current, prev_dir, path = heapq.heappop(pq)
 
-        # If we've reached the destination, return the path
-        if current == end:
+        # Add check for a max score to speed up calculation
+        if cost > max_score:
+            continue
+
+        # Check if the current path matches any ignored path
+        # If the current path is a prefix of any ignored path, skip it
+#        if is_prefix(path, ignore_paths):
+#            continue
+
+        # If we've reached the destination, save the path to the list
+        if current == end and not is_prefix(path, ignore_paths):
+#            all_paths.append(path)
+#            all_costs.append(cost)
+#            max_score = min(all_costs)
+#            continue
             return path, cost
+
+        if current == end and is_prefix(path, ignore_paths):
+            continue
 
         # Explore neighbors
         for neighbor in graph.get(current, []):
             turn_cost, new_dir = calculate_turn_cost(prev_dir, current, neighbor)
             new_cost = cost + turn_cost
 
+            # Only process the neighbor if the new cost is lower
+#            if neighbor not in min_cost or new_cost < min_cost[neighbor]:
+#                min_cost[neighbor] = new_cost
+#                heapq.heappush(pq, (new_cost, neighbor, new_dir, path + [neighbor]))
+
             # If this path is cheaper, or we haven't visited this node
-            if neighbor not in min_cost or new_cost < min_cost[neighbor]:
-                min_cost[neighbor] = new_cost
+            if not is_prefix(path, ignore_paths):
+                if neighbor not in min_cost:
+                    min_cost[neighbor] = new_cost
+                    heapq.heappush(pq, (new_cost, neighbor, new_dir, path + [neighbor]))
+            # If this path is cheaper and not a prefix of any ignored path
+                elif new_cost < min_cost[neighbor]:
+                    min_cost[neighbor] = new_cost
+                    heapq.heappush(pq, (new_cost, neighbor, new_dir, path + [neighbor]))
+            # Continue to follow the path of an ignored path in case there are variants further down
+            elif is_prefix(path, ignore_paths):
                 heapq.heappush(pq, (new_cost, neighbor, new_dir, path + [neighbor]))
+#                if neighbor in alternate_paths:
+#                    alternate_paths.pop(neighbor)
+#            elif new_cost == min_cost[neighbor]:
+#                if neighbor not in alternate_paths:
+#                   alternate_paths[neighbor] = [path + [neighbor]]
+#                else:
+#                    alternate_paths[neighbor].append(path + [neighbor])
 
-    # If no path is found
+    # Return
+
+    #return all_paths, all_costs
+
+  # If no path is found
     return [], float('inf')
-
 
 
 def replace_characters_in_map(p, c, m):
     for y in range(len(m)):
         for x in range(len(m[y])):     
             if len(p) != 2:
-                if [x, y] in p:
+                if [x, y] in p or (x, y) in p:
                     m[y] = replace_char_at_index(m[y], x, c)
             else:
                 if [x, y] == [p[0], p[1]]:
@@ -130,7 +188,7 @@ def map_potential_steps(wandh, walls):
 
 
 # Open the file and read all lines into a list
-with open("AoC_2024_Puzzle16Data_test2.txt", "r") as f:
+with open("AoC_2024_Puzzle16Data.txt", "r") as f:
     data = f.readlines()
 
 map = []
@@ -138,6 +196,8 @@ instructions = ""
 wandh = []
 potential_steps = []
 path = []
+all_paths = []
+all_costs = []
 
 for line in data:
     map.append(line.strip("\n"))
@@ -148,16 +208,37 @@ walls = find_symbols_in_map(map, "#")
 wandh = [len(map[0]) ,len(map)]
 start_dir = (1, 0)
 potential_steps = map_potential_steps(wandh, walls)
+alt_paths = {}
+ignore_paths = []
+max_score=float('inf')
 
-path, path_score = find_shortest_path_with_weights(potential_steps, start, end, start_dir)
+path, path_score = find_shortest_path_with_weights(potential_steps, start, end, start_dir, max_score, ignore_paths)
+temp_path_score = path_score
+
+k = 0
+
+while temp_path_score == path_score and k <= 100:
+    print(k)
+    ignore_paths.append(path)
+    path, temp_path_score = find_shortest_path_with_weights(potential_steps, start, end, start_dir, path_score, ignore_paths)
+    k += 1
+
+seating_tiles = []
+
+for i in range(len(ignore_paths)):
+    for point in ignore_paths[i]:
+        if point not in seating_tiles:
+            seating_tiles.append(point)
 
 #for key, value in potential_steps.items():
 #    print(key, value)
-for point in path:
-    path[path.index(point)] = [point[0], point[1]]
 
-final_map = draw_map(wandh, path, walls)
+for point in seating_tiles:
+    seating_tiles[seating_tiles.index(point)] = [point[0], point[1]]
+
+final_map = draw_map(wandh, seating_tiles, walls)
 for line in final_map:
     print(line)
 
-print("The shortest path length is", path_score, len(path))
+print("The number of seating tiles is", len(seating_tiles))
+

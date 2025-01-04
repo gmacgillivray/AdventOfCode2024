@@ -165,7 +165,7 @@ def adjust_graph(points_graph, walls, wandh, wall_to_remove):
         points_graph[(wall_to_remove[0], wall_to_remove[1])].append((wall_to_remove[0] - 1, wall_to_remove[1]))
     if (wall_to_remove[0] + 1, wall_to_remove[1]) in points_graph:
         points_graph[(wall_to_remove[0] + 1, wall_to_remove[1])].append((wall_to_remove[0], wall_to_remove[1]))
-        points_graph[(wall_to_remove[0], wall_to_remove[1])].append([)(wall_to_remove[0] + 1, wall_to_remove[1]))
+        points_graph[(wall_to_remove[0], wall_to_remove[1])].append((wall_to_remove[0] + 1, wall_to_remove[1]))
     if (wall_to_remove[0], wall_to_remove[1] - 1) in points_graph:
         points_graph[(wall_to_remove[0], wall_to_remove[1] - 1)].append((wall_to_remove[0], wall_to_remove[1]))
         points_graph[(wall_to_remove[0], wall_to_remove[1])].append((wall_to_remove[0], wall_to_remove[1]) - 1)
@@ -176,7 +176,7 @@ def adjust_graph(points_graph, walls, wandh, wall_to_remove):
     return points_graph
 
 # Open the file and read all lines into a list
-with open("AoC_2024_Puzzle20Data.txt", "r") as f:
+with open("AoC_2024_Puzzle20Data_test.txt", "r") as f:
     data = f.readlines()
 
 map = []

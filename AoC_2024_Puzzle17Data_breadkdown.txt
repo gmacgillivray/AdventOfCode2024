@@ -1,0 +1,23 @@
+Register A: 61657405
+Register B: 0
+Register C: 0
+
+Program: 2,4,1,2,7,5,4,3,0,3,1,7,5,5,3,0
+
+Program: 
+2,4 reg A % 8, store in B
+1,2 bitwise xor reg B ^ 2
+7,5 reg A / 2 ** reg B store in C
+4,3 register B ^ (bitwise OR) reg C, store in B
+0,3 reg A / 2 ** 3 (8) take int of the result, store in A
+1,7 register B ^ (bitwise XOR) 7, store in B
+5,5 out instruction register B % 8
+
+
+Reverse Program
+register B = operand + 8 * n
+register B = reg B ^ 7
+reg A = 2 ** 3 * reg A
+reg B = reg B ^ reg C
+
+3,0 jnz back to instruction 0 unless reg A == 0

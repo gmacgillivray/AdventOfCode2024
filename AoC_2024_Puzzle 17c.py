@@ -27,18 +27,18 @@ def combo_operand(reg, operand):
     else:
         return
 
-def adv(reg, operand):
+def r_adv(reg, operand):
    
 # The adv instruction (opcode 0) performs division. The numerator is the value in the A register. 
 # The denominator is found by raising 2 to the power of the instruction's combo operand. 
 # (So, an operand of 2 would divide A by 4 (2^2); an operand of 5 would divide A by 2^B.) 
 # The result of the division operation is truncated to an integer and then written to the A register.
     
-    reg["A"] = int(reg["A"]/(2 ** combo_operand(reg, operand)))
+    reg["A"] = reg["A"] * (2 ** combo_operand(reg, operand))
     
     return reg
 
-def bxl(reg, operand):
+def r_bxl(reg, operand):
    
 # The bxl instruction (opcode 1) calculates the bitwise XOR of register B and the instruction's 
 # literal operand, then stores the result in register B.
@@ -47,7 +47,7 @@ def bxl(reg, operand):
     
     return reg
 
-def bst(reg, operand):
+def r_bst(reg, operand):
    
 # The bst instruction (opcode 2) calculates the value of its combo operand modulo 8 (thereby keeping
 # only its lowest 3 bits), then writes that value to the B register.

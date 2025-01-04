@@ -118,7 +118,7 @@ def execute_instructions(registers, output, instructions, ins_pointer):
     return registers, output, ins_pointer
 
 # Open the file and read all lines into a list
-with open("AoC_2024_Puzzle17Data_test_6.txt", "r") as f:
+with open("AoC_2024_Puzzle17Data.txt", "r") as f:
     data = f.readlines()
 
 instructions = []
@@ -148,13 +148,75 @@ for i in range(len(commands)):
         input_string = commands[i]
     else:
         input_string += "," + commands[i]
+        
+reverse_input_string = ""
 
-ins_pointer = 0
+for i in range(len(commands) - 1, - 1, -1):
+    reverse_input_string += commands[i]
 
-while ins_pointer < len(instructions):
+int_input_string = int(reverse_input_string)
+        
+#k = 147999999999999
+#k = 7999999999999
+k = 10000000000000
+orig_B = registers["B"]
+orig_C = registers["C"]
+
+
+
+while instructions != output:
     
-    registers, output, ins_pointer = execute_instructions(registers, output, instructions, ins_pointer)
-    ins_pointer += 2
+    ins_pointer = 0
+    registers["A"] = k
+    registers["B"] = orig_B
+    registers["C"] = orig_C
+    output = []
+
+    while ins_pointer < len(instructions):
+        
+        registers, output, ins_pointer = execute_instructions(registers, output, instructions, ins_pointer)
+        
+        if output == instructions[:len(output)]:
+            ins_pointer += 2
+        else:
+            ins_pointer = len(instructions) + 1
+
+    #reverse_output_string = ""
+
+    #for i in range(len(output) - 1, - 1, -1):
+    #    reverse_output_string += str(output[i])
+
+    #int_output_string = int(reverse_output_string)
+
+    #if int_output_string < int_input_string:
+    #    k +=  int_input_string - int_output_string
+    #else:
+    #    k += 10000
+    
+#    if len(instructions) == len(output):
+#        for i in range(len(instructions) - 1, 7, -1):
+#            if instructions[i] > output[i]:
+#                k += 10 ** (len(instructions) - 7 - (len(instructions) - i))
+#            elif instructions[i] < output[i]:
+#                k -= 10 ** (len(instructions) - 7 - (len(instructions) - i))
+#    if len(instructions) > len(output):
+#        k += 10 ** (len(instructions) - 6)
+#    if len(instructions) < len(output):
+#        k -+ 10 ** (len(instructions) - 6)           
+    
+    sim_count = 0
+    
+    for i in range(len(output)):
+        if instructions[i] == output[i]:
+            sim_count += 1
+
+#    if k % 1000000 == 0:
+    if sim_count >= 4:
+        print(k)
+        print("instructions =", instructions)
+        print("output       =", output)
+    
+    k += 1
 
 output_string = ""
 

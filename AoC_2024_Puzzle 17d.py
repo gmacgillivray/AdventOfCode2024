@@ -117,8 +117,20 @@ def execute_instructions(registers, output, instructions, ins_pointer):
     
     return registers, output, ins_pointer
 
+def run_program(registers, instructions):
+    
+    output = []
+    ins_pointer = 0
+    
+    while ins_pointer < len(instructions):
+        
+        registers, output, ins_pointer = execute_instructions(registers, output, instructions, ins_pointer)
+        ins_pointer += 2  
+    
+    return registers, output 
+
 # Open the file and read all lines into a list
-with open("AoC_2024_Puzzle17Data_test_6.txt", "r") as f:
+with open("AoC_2024_Puzzle17Data.txt", "r") as f:
     data = f.readlines()
 
 instructions = []
@@ -148,16 +160,63 @@ for i in range(len(commands)):
         input_string = commands[i]
     else:
         input_string += "," + commands[i]
+        
+reverse_input_string = ""
 
-ins_pointer = 0
+for i in range(len(commands) - 1, - 1, -1):
+    reverse_input_string += commands[i]
 
-while ins_pointer < len(instructions):
+int_input_string = int(reverse_input_string)
+        
+#k = 147999999999999
+#k = 7999999999999
+k = 10000000000000
+orig_B = registers["B"]
+orig_C = registers["C"]
+reg_A_values = []
+reg_A_values.append([0])
+final_values = []
+
+for i in range(len(instructions)):
     
-    registers, output, ins_pointer = execute_instructions(registers, output, instructions, ins_pointer)
-    ins_pointer += 2
+    temp_A_reg = []
+    temp_final = []
+    
+    for j in range(len(reg_A_values[i])):
+        
+        for remainder in range(8):
+            
+            ins_pointer = 0
+            registers["A"] = reg_A_values[i][j] + remainder
+            registers["B"] = orig_B
+            registers["C"] = orig_C
+            output = []
+
+            registers, output = run_program(registers, instructions)
+            
+            if output != []:
+#                temp_value = instructions[len(instructions) - 1 - i]
+#                temp_value2 = int(output[0])
+#                if temp_value == temp_value2:
+                if instructions[len(instructions) - 1 - i] == output[0]:
+                    temp_A_reg.append(8 * (reg_A_values[i][j] + remainder))
+                    temp_final.append(reg_A_values[i][j] + remainder)
+            
+    reg_A_values.append(temp_A_reg)  
+    final_values.append(temp_final)  
 
 output_string = ""
 
+for x in range(len(final_values)):
+
+    for i in range(len(final_values[x])):
+        registers["A"] = final_values[x][i]
+        print(x, i, final_values[x][i])
+        registers, output = run_program(registers,instructions)
+        print(output)
+        print(instructions[len(instructions) - len(output): len(instructions)])
+        print(instructions)
+        
 for i in range(len(output)):
     if i == 0:
         output_string = str(output[i])
@@ -169,5 +228,6 @@ print("The output pattern is =", output_string)
 print("Register A = ", registers["A"])
 print("Register B = ", registers["B"])
 print("Register C = ", registers["C"])
+print("The minimum value that generates the input pattern is =", min(final_values[15]))
 
 

@@ -214,41 +214,28 @@ start_dir = None
 max_time = None
 delta_time = 2
 cheats = {}
-total_cheats_100 = 0
+total_cheats = 0
+cheat_time = 20
+minimum_time_saved = 100
 
 path, max_time = find_shortest_path_with_weights(potential_steps, start, end, max_time, start_dir)
 
-potential_shortcuts = find_shortcuts(walls, wandh, delta_time)
+#potential_shortcuts = find_shortcuts(walls, wandh, delta_time)
 
 k = 0
 
-for wall_shortcut in potential_shortcuts:
-    new_walls = walls.copy()
-    new_walls.remove(wall_shortcut)
-#        potential_steps = map_potential_steps(wandh, new_walls)
-
-    potential_steps = adjust_graph(potential_steps.copy(), walls, wandh, wall_shortcut)
-
-    path, path_score = find_shortest_path_with_weights(potential_steps, start, end, max_time, start_dir)
+for i in range(len(path) - 1):
+    for j in range(i + 2, len(path)):
+        delta_time = abs(path[j][0] - path[i][0]) + abs(path[j][1] - path[i][1])
+        if delta_time <= cheat_time and delta_time > 1:
+            time_saved = j - i - delta_time
+            if time_saved not in cheats and time_saved >= minimum_time_saved:
+                cheats[time_saved] = 1
+            elif time_saved >= minimum_time_saved:
+                cheats[time_saved] += 1
     
-    potential_steps = adjust_graph_clean(potential_steps.copy(), walls, wandh, wall_shortcut)
-
-
-    if (max_time - path_score) not in cheats and path_score < max_time:
-        cheats[max_time - path_score] = 1
-    elif (max_time - path_score) in cheats and path_score < max_time:
-        cheats[max_time - path_score] += 1
-    
-    if max_time - path_score >= 100:
-        total_cheats_100 += 1
-
-    k += 1
-    print(k, "/", len(potential_shortcuts))
-
-#for key, value in potential_steps.items():
-#    print(key, value)
-#for point in path:
-#    path[path.index(point)] = [point[0], point[1]]
+            if time_saved >= minimum_time_saved:
+                total_cheats += 1
 
 #final_map = draw_map(wandh, path, walls)
 #final_map = replace_character_in_map(start, "S", final_map)
@@ -257,8 +244,7 @@ for wall_shortcut in potential_shortcuts:
 #for line in final_map:
 #    print(line)
 
-#print("The shortest path length is", shortest_path)
 for key, value in cheats.items():
     print("There are", value, "cheats that save", key, "nanoseconds")
     
-print("There are", total_cheats_100, "cheats that save 100 nanoseconds or more")
+print("There are", total_cheats, "cheats that save", minimum_time_saved, " nanoseconds or more")
